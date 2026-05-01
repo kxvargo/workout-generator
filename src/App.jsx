@@ -17,13 +17,24 @@ const WORKOUT_SKILL = `You are generating a group fitness workout for an experie
 - Terrain language: flats, climbs, rollers, sprints, seated vs. standing
 - Cue gear changes explicitly
 
-### SilverSneakers (Older Adult Fitness)
-- Population: 65+ adults; range from sedentary to active
-- Always offer modifications (seated, reduced ROM, lighter resistance)
-- Emphasize: balance, functional movement, fall prevention, joint safety
-- Avoid: high-impact, rapid direction changes, deep flexion without support
+### Strong & Steady (Older Adult Standing Strength + Balance)
+- Population: active older adults; all-standing format with chair available for support
+- Equipment: chair (for support, not seated work), light dumbbells, resistance band
+- Always offer modifications (chair-assisted, lighter resistance, reduced ROM)
+- Emphasize: functional strength, balance, fall prevention, joint safety
+- Avoid: high-impact, rapid direction changes, floor work
 - Tone: warm, encouraging, celebratory of effort
-- Structure: Warm-up (10 min) → Cardio (10-15 min) → Strength (10-15 min) → Balance (5 min) → Cool-down/stretch (10 min)
+- Structure: Warm-up (5 min) → Strength circuit (8 standing strength moves, with chair/weights/band) → Balance circuit (4 standing balance moves) → Cool-down/stretch (5 min)
+
+### HIIT
+- Population: intermediate to advanced; high-intensity interval training
+- Equipment: optional dumbbells, mat
+- Structure: Warm-up → 5-station circuit performed 3 rounds → Core (5 min) → Cool-down (5 min)
+- Round 1: 5 strength/skill stations, NO cardio burnout between rounds
+- Round 2: same 5 stations + cardio burnout finisher (e.g. jumping jacks, squat jumps, burpees)
+- Round 3: same 5 stations + a DIFFERENT cardio burnout (e.g. mountain climbers, high knees, skaters)
+- Cue clear work/rest intervals; intensity targets RPE 7-9 during work, RPE 3-4 during rest
+- Always offer low-impact modifications for jumps and plyos
 
 ## Output Format
 
@@ -61,7 +72,8 @@ Music selection is contextual and emotional. Consider emotional resonance, lyric
 Class-specific guidance:
 - Aqua: upbeat pop, dance, reggae, Latin — strong clear beat
 - Spin: EDM, rock, hip-hop for peaks; acoustic for cool-down; BPM-guided
-- SilverSneakers: classic rock, oldies, Motown, familiar pop — NO heavy metal or explicit lyrics
+- Strong & Steady: classic rock, oldies, Motown, familiar pop with steady tempo — NO heavy metal or explicit lyrics
+- HIIT: high-BPM EDM, hip-hop, hard rock — energy peaks during cardio burnouts, recovery tracks between rounds
 
 Return ONLY this markdown — no preamble:
 
@@ -124,15 +136,16 @@ Return a structured session as markdown:
 ## Progressions & Regressions
 [Key modifications]`;
 
-const classTypes = ["Aqua Aerobics", "Spin / Cycling", "SilverSneakers", "Personal Training"];
+const classTypes = ["Aqua Aerobics", "Spin / Cycling", "Strong & Steady", "HIIT", "Personal Training"];
 const durations = ["30 min", "45 min", "60 min", "75 min"];
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 const hasMusic = (ct) => ct !== "Personal Training";
-const CLASS_ICONS = { "Aqua Aerobics": "🌊", "Spin / Cycling": "🚴", "SilverSneakers": "⭐", "Personal Training": "🏋️" };
+const CLASS_ICONS = { "Aqua Aerobics": "🌊", "Spin / Cycling": "🚴", "Strong & Steady": "⭐", "HIIT": "🔥", "Personal Training": "🏋️" };
 const themes = {
   "Aqua Aerobics": ["Ocean Waves", "Summer Splash", "Tropical Escape", "Deep Dive", "Custom..."],
   "Spin / Cycling": ["Mountain Climb", "Grand Tour", "Night Ride", "Speed Demons", "Custom..."],
-  "SilverSneakers": ["Garden Party", "Strong & Steady", "Decades of Dance", "Summer Stroll", "Custom..."],
+  "Strong & Steady": ["Standing Strong", "Foundation", "Decades of Dance", "Garden Party", "Custom..."],
+  "HIIT": ["Inferno", "Power Surge", "Full Throttle", "Tabata Tour", "Custom..."],
   "Personal Training": ["Full Body Strength", "Lower Body Power", "Upper Body Focus", "Endurance Base", "Custom..."],
 };
 
