@@ -397,10 +397,10 @@ function ArchiveCard({ entry, onLoad, onDelete, onDownload }) {
   );
 }
 
-// ─── Remote archive sync (Netlify Blobs via /functions/archive) ───────────
+// ─── Remote archive sync (Netlify Blobs via /api/archive) ─────────────────
 async function fetchRemoteArchive() {
   try {
-    const r = await fetch("/.netlify/functions/archive");
+    const r = await fetch("/api/archive");
     if (!r.ok) return null;
     const data = await r.json();
     return Array.isArray(data.archive) ? data.archive : null;
@@ -409,12 +409,12 @@ async function fetchRemoteArchive() {
 
 async function pushRemoteArchive(archive) {
   try {
-    await fetch("/.netlify/functions/archive", {
+    const r = await fetch("/api/archive", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ archive }),
     });
-    return true;
+    return r.ok;
   } catch { return false; }
 }
 
@@ -468,27 +468,58 @@ export default function App() {
     setSyncStatus(ok ? "synced" : "local-only");
   }
 
-  async function callClaude(system, user, maxTokens = 4000) {
+  // Streams from a Netlify Edge Function so long Claude responses don't
+  // hit the regular function timeout. Reads SSE and accumulates text deltas.
+  async function callClaude(system, user, maxTokens = 4000, onProgress) {
     let res;
     try {
-      res = await fetch("/.netlify/functions/claude", {
+      res = await fetch("/api/claude-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system, messages: [{ role: "user", content: user }], max_tokens: maxTokens }),
       });
     } catch (e) {
-      // network error / function never responded (likely Netlify function timeout)
-      throw new Error(`Network error reaching Claude function — likely a function timeout. The site's Netlify function may have hit its time limit before Claude finished. (${e.message})`);
+      throw new Error(`Network error reaching Claude edge function. (${e.message})`);
     }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`Claude function returned ${res.status} ${res.statusText}. ${text.slice(0, 300)}`);
+      throw new Error(`Claude stream returned ${res.status} ${res.statusText}. ${text.slice(0, 400)}`);
     }
-    const data = await res.json();
-    if (data.error) throw new Error(`Claude API error: ${data.error.message || JSON.stringify(data.error)}`);
-    const out = data.content?.[0]?.text;
-    if (!out) throw new Error(`Claude returned no text content. Response: ${JSON.stringify(data).slice(0, 300)}`);
-    return out;
+    if (!res.body) throw new Error("Claude stream returned no body");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let result = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE: events are separated by a blank line.
+      const events = buffer.split("\n\n");
+      buffer = events.pop() || "";
+
+      for (const evt of events) {
+        let dataLine = "";
+        for (const line of evt.split("\n")) {
+          if (line.startsWith("data: ")) dataLine = line.slice(6);
+        }
+        if (!dataLine || dataLine === "[DONE]") continue;
+        let json;
+        try { json = JSON.parse(dataLine); } catch { continue; }
+        if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
+          result += json.delta.text;
+          if (onProgress) onProgress(result);
+        } else if (json.type === "error") {
+          throw new Error(`Claude API error: ${json.error?.message || JSON.stringify(json.error)}`);
+        }
+      }
+    }
+
+    if (!result) throw new Error("Claude stream ended with no text content");
+    return result;
   }
 
   async function generate() {
