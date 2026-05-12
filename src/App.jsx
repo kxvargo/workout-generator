@@ -4,19 +4,6 @@ const WORKOUT_SKILL = `You are generating a group fitness workout for an experie
 
 ## Class Type Conventions
 
-### Aqua Aerobics
-- Water provides 12x resistance of air — cues should reference water, not air
-- Structure: Thermal warm-up → Cardio peak (intervals or circuits) → Muscular endurance → Cool-down/stretch
-- Intensity language: "push through the water", "slice vs. scoop", "use the water's resistance"
-- Equipment options: noodles, water dumbbells, kickboards, ankle cuffs
-- Safety: no jumping on pool deck; transitions should be smooth
-
-### Spin / Cycling
-- Structure: Warm-up (5-10 min) → Main set (intervals, climbs, sprints, or endurance) → Cool-down (5 min)
-- Use RPE (1-10) and cadence (RPM) guidance
-- Terrain language: flats, climbs, rollers, sprints, seated vs. standing
-- Cue gear changes explicitly
-
 ### Strong & Steady (Older Adult Standing Strength + Balance)
 - Population: active older adults; all-standing format with chair available for support
 - Equipment: chair (for support, not seated work), light dumbbells, resistance band
@@ -70,8 +57,6 @@ const MUSIC_SKILL = `You are curating music for a group fitness class. You have 
 Music selection is contextual and emotional. Consider emotional resonance, lyric energy, and cultural fit.
 
 Class-specific guidance:
-- Aqua: upbeat pop, dance, reggae, Latin — strong clear beat
-- Spin: EDM, rock, hip-hop for peaks; acoustic for cool-down; BPM-guided
 - Strong & Steady: classic rock, oldies, Motown, familiar pop with steady tempo — NO heavy metal or explicit lyrics
 - HIIT: high-BPM EDM, hip-hop, hard rock — energy peaks during cardio burnouts, recovery tracks between rounds
 
@@ -93,6 +78,99 @@ Return ONLY this markdown — no preamble:
 [complete flat list, all songs in order]
 
 Rules: real songs only, 2-4 per phase, match energy arc, no repeated artists, exact titles for Spotify.`;
+
+// ─────────────────────────────────────────────────────────────────────────
+// SONG-ALIGNED PROMPTS — for Spin and Aqua. Playlist is generated first,
+// then a workout where each song carries its own intensity + coaching cues
+// that reference that song's lyrics/hooks/tempo.
+// ─────────────────────────────────────────────────────────────────────────
+
+const SONG_PLAYLIST_SKILL = `You are curating a playlist for a group fitness class where each song will drive a specific block of the workout. You'll select REAL songs with accurate durations.
+
+Class-specific guidance:
+- Aqua: upbeat pop, dance, reggae, Latin — strong clear beat that swimmers can hear underwater. BPM 100-130. Songs build from gentle (warm-up) to peak (cardio) to muscular endurance to slow cool-down.
+- Spin: EDM, rock, hip-hop, pop. BPM 75-105 for cadence work, 65-80 BPM for climbs. Build through warm-up → power intervals → peak climb → active recovery → cool-down.
+
+Pick songs whose lyrics, hooks, and energy ARCS map naturally to workout phases. For example, a song with a strong recurring chorus drop is great for surges or standing intervals.
+
+Return ONLY this markdown — no preamble:
+
+# Playlist: [Theme] ([Class Type])
+**Total tracks:** X | **Estimated duration:** ~X minutes
+
+## Track Order with Phase Assignment
+1. **[Artist] - [Song Title]** (~M:SS) — Phase: [Warm-Up / Build / Peak / Recovery / Cool-Down]
+2. **[Artist] - [Song Title]** (~M:SS) — Phase: ...
+[continue numbered list — every song gets a phase label]
+
+## Full Song List (for playlist script)
+- Artist Name - Song Title
+[flat list, in order, exact titles for Spotify]
+
+Rules: real songs only, exact titles for Spotify, no repeated artists, total duration must approximate the requested class length, energy arc must match the requested theme and class type.`;
+
+const SONG_ALIGNED_WORKOUT_SKILL = `You are an experienced group fitness instructor (~20 years endurance sports, USMS Level 1 Swim Coach, expert in aqua and spin programming). You've been given a finalized playlist for an upcoming class. Write the class as a SONG-BY-SONG workout where each song's coaching block references that specific song's hooks, lyrics, beat, and energy.
+
+## Class Type Conventions
+
+### Aqua Aerobics
+- Water provides 12x resistance of air — cues should reference water, not air
+- Intensity language: "push through the water", "slice vs. scoop", "use the water's resistance"
+- Equipment options: noodles, water dumbbells, kickboards, ankle cuffs
+- Safety: no jumping on pool deck; transitions smooth; always offer a "one foot down" modification
+- Phases: Warm-Up (Gentle Tide) → Cardio Peak (Building Swells) → Muscular Endurance (Wave Power) → Cool-Down (Calm Waters)
+- Per-song metadata to include: Duration, RPE, Activity name, Modification option
+
+### Spin / Cycling
+- Use RPE (1-10) and cadence (RPM) guidance per song
+- Terrain language: flats, climbs, rollers, sprints, seated vs. standing
+- Cue gear changes explicitly
+- Phases: Warm-Up → Main Set (Intervals & Power) → Active Recovery → Cool-Down
+- Per-song metadata to include: Duration, RPE, Cadence (RPM), Resistance level, Position (seated/standing/combo)
+
+## Output Format — SONG-BY-SONG
+
+Each song gets its own ### section. Reference the song by name in cues (the chorus, the hook, the drop, the verse). Use the song's energy to drive the workout block.
+
+# [Class Type]: [Theme]
+**Duration:** X min | **Level:** [level] | **Equipment:** [list]
+**Peak RPE:** X | **Tracks:** N songs
+
+## Class Overview
+[2-3 sentences setting up the theme and arc]
+
+## PHASE 1: [Phase Name] ([X min] · Songs [n-m] · RPE [range])
+
+### Song 1: [Song Title] — [Artist]
+**Duration:** ~M:SS | **RPE:** X-Y | **[Cadence/Activity field]:** [details] | **[Intensity/Position field]:** [details]
+
+**Coaching Cues:**
+- [Specific cue that references the song — entry, setup]
+- [Cue tied to the verse or first 30 sec]
+- [Cue tied to the chorus/hook/drop — name it: "On the chorus...", "When the hook hits..."]
+- [Modification cue if applicable]
+- [Coaching cue with motivational language: "Coaching cue: '...'"]
+
+### Song 2: ...
+[same structure]
+
+## PHASE 2: ...
+[songs in this phase]
+
+## PHASE 3: ...
+[songs in this phase]
+
+## PHASE 4: ...
+[songs in this phase]
+
+## Instructor Notes
+- [3-5 tips: RPE scale reminder, modification reminders, hydration cue, emotional high point, etc.]
+
+Rules:
+- Every song from the playlist appears in order
+- Each song's coaching cues reference that specific song's structure (verse/chorus/bridge/drop) where appropriate
+- Use the song's emotional tone to inform the cue language
+- Always cue safety modifications for spin (resistance is rider's choice) and aqua (one foot down for any jump)`;
 
 const PT_SKILL = `You are generating a personal training session for an experienced personal trainer with ~20 years of endurance sports background and expertise in strength, functional fitness, and endurance athlete programming.
 
@@ -140,6 +218,7 @@ const classTypes = ["Aqua Aerobics", "Spin / Cycling", "Strong & Steady", "HIIT"
 const durations = ["30 min", "45 min", "60 min", "75 min"];
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 const hasMusic = (ct) => ct !== "Personal Training";
+const isSongAligned = (ct) => ct === "Aqua Aerobics" || ct === "Spin / Cycling";
 const CLASS_ICONS = { "Aqua Aerobics": "🌊", "Spin / Cycling": "🚴", "Strong & Steady": "⭐", "HIIT": "🔥", "Personal Training": "🏋️" };
 const themes = {
   "Aqua Aerobics": ["Ocean Waves", "Summer Splash", "Tropical Escape", "Deep Dive", "Custom..."],
@@ -156,8 +235,8 @@ function extractSongList(md) {
   return md.slice(idx).split("\n").filter(l => l.startsWith("- ")).map(l => l.slice(2).trim()).join("\n");
 }
 
-function downloadFile(content, filename) {
-  const blob = new Blob([content], { type: "text/plain" });
+function downloadFile(content, filename, type = "text/plain") {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = filename;
@@ -187,6 +266,16 @@ function legacyCopy(text) {
 function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40); }
 function formatDate(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
 
+function entryToMarkdown(entry) {
+  const header = `# ${entry.classType}: ${entry.theme}\n` +
+    `_${formatDate(entry.createdAt)} · ${entry.duration} · ${entry.level}_\n\n`;
+  const notes = entry.notes ? `**Workout notes:** ${entry.notes}\n\n` : "";
+  const musicNotes = entry.musicNotes ? `**Music notes:** ${entry.musicNotes}\n\n` : "";
+  const workout = entry.workoutMd || "";
+  const music = entry.musicMd ? `\n\n---\n\n${entry.musicMd}` : "";
+  return header + notes + musicNotes + workout + music + "\n";
+}
+
 function MarkdownDisplay({ content }) {
   if (!content) return null;
   const lines = content.split("\n");
@@ -195,9 +284,15 @@ function MarkdownDisplay({ content }) {
       {lines.map((line, i) => {
         if (line.startsWith("# ")) return <h1 key={i} style={{ fontSize: "1.4rem", fontWeight: 700, color: "#0f3460", marginTop: "1.2rem", marginBottom: "0.4rem", borderBottom: "2px solid #e94560", paddingBottom: "0.3rem" }}>{line.slice(2)}</h1>;
         if (line.startsWith("## ")) return <h2 key={i} style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f3460", marginTop: "1rem", marginBottom: "0.3rem" }}>{line.slice(3)}</h2>;
-        if (line.startsWith("### ")) return <h3 key={i} style={{ fontSize: "1rem", fontWeight: 600, color: "#e94560", marginTop: "0.8rem", marginBottom: "0.2rem" }}>{line.slice(4)}</h3>;
+        if (line.startsWith("### ")) return <h3 key={i} style={{ fontSize: "1rem", fontWeight: 600, color: "#e94560", marginTop: "0.8rem", marginBottom: "0.2rem", background: "rgba(233,69,96,0.06)", padding: "0.4rem 0.6rem", borderRadius: 6, borderLeft: "3px solid #e94560" }}>{line.slice(4)}</h3>;
         if (/^\*\*.*\*\*$/.test(line)) return <p key={i} style={{ fontWeight: 600, margin: "0.2rem 0", fontSize: "0.9rem" }}>{line.replace(/\*\*/g, "")}</p>;
-        if (line.startsWith("- ")) return <div key={i} style={{ paddingLeft: "1.2rem", margin: "0.15rem 0", display: "flex", gap: "0.5rem" }}><span style={{ color: "#e94560", flexShrink: 0 }}>•</span><span style={{ fontSize: "0.9rem" }}>{line.slice(2)}</span></div>;
+        // Inline-bold inside bullets and paragraphs
+        const renderInline = (text) => text.split(/(\*\*[^*]+\*\*)/g).map((seg, j) =>
+          seg.startsWith("**") && seg.endsWith("**")
+            ? <strong key={j} style={{ color: "#0f3460" }}>{seg.slice(2, -2)}</strong>
+            : <span key={j}>{seg}</span>
+        );
+        if (line.startsWith("- ")) return <div key={i} style={{ paddingLeft: "1.2rem", margin: "0.15rem 0", display: "flex", gap: "0.5rem" }}><span style={{ color: "#e94560", flexShrink: 0 }}>•</span><span style={{ fontSize: "0.9rem" }}>{renderInline(line.slice(2))}</span></div>;
         if (line.startsWith("|")) {
           const cells = line.split("|").filter(c => c.trim());
           const isHeader = lines[i + 1]?.includes("---");
@@ -209,7 +304,7 @@ function MarkdownDisplay({ content }) {
           );
         }
         if (line.trim() === "") return <div key={i} style={{ height: "0.35rem" }} />;
-        return <p key={i} style={{ margin: "0.2rem 0", fontSize: "0.9rem" }}>{line}</p>;
+        return <p key={i} style={{ margin: "0.2rem 0", fontSize: "0.9rem" }}>{renderInline(line)}</p>;
       })}
     </div>
   );
@@ -231,7 +326,6 @@ function SpotifyPanel({ musicMd, title }) {
 
   return (
     <div>
-      {/* Instructions */}
       <div style={{ background: "#ebf8ff", border: "1px solid #63b3ed", borderRadius: 12, padding: "1.1rem 1.2rem", marginBottom: "1.2rem" }}>
         <div style={{ fontWeight: 700, color: "#2b6cb0", marginBottom: "0.5rem", fontSize: "0.9rem" }}>📋 How to create your Spotify playlist</div>
         <ol style={{ margin: 0, paddingLeft: "1.3rem", color: "#2c5282", fontSize: "0.82rem", lineHeight: 2 }}>
@@ -241,7 +335,6 @@ function SpotifyPanel({ musicMd, title }) {
         </ol>
       </div>
 
-      {/* Song list — always visible, auto-selects on focus */}
       <div style={{ marginBottom: "1.2rem" }}>
         <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.8rem" }}>
           <button onClick={() => downloadFile(songList, filename)} style={{ padding: "0.5rem 1rem", borderRadius: 8, border: "none", background: "#38a169", color: "white", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
@@ -261,7 +354,6 @@ function SpotifyPanel({ musicMd, title }) {
         />
       </div>
 
-      {/* Terminal command */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
           <h3 style={{ color: "#0f3460", fontSize: "0.9rem", margin: 0 }}>Terminal Command</h3>
@@ -277,7 +369,7 @@ function SpotifyPanel({ musicMd, title }) {
   );
 }
 
-function ArchiveCard({ entry, onLoad, onDelete }) {
+function ArchiveCard({ entry, onLoad, onDelete, onDownload }) {
   return (
     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "0.9rem 1.1rem", display: "flex", alignItems: "center", gap: "0.9rem" }}>
       <div style={{ fontSize: "1.5rem", lineHeight: 1, flexShrink: 0 }}>{CLASS_ICONS[entry.classType] || "💪"}</div>
@@ -291,6 +383,9 @@ function ArchiveCard({ entry, onLoad, onDelete }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+        <button onClick={() => onDownload(entry)} title="Download as Markdown" style={{ padding: "0.38rem 0.6rem", borderRadius: 7, border: "1px solid rgba(104,211,145,0.4)", background: "rgba(104,211,145,0.1)", color: "#68d391", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+          ⬇ MD
+        </button>
         <button onClick={() => onLoad(entry)} style={{ padding: "0.38rem 0.75rem", borderRadius: 7, border: "1px solid rgba(233,69,96,0.5)", background: "rgba(233,69,96,0.12)", color: "#e94560", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
           Load
         </button>
@@ -302,6 +397,27 @@ function ArchiveCard({ entry, onLoad, onDelete }) {
   );
 }
 
+// ─── Remote archive sync (Netlify Blobs via /functions/archive) ───────────
+async function fetchRemoteArchive() {
+  try {
+    const r = await fetch("/.netlify/functions/archive");
+    if (!r.ok) return null;
+    const data = await r.json();
+    return Array.isArray(data.archive) ? data.archive : null;
+  } catch { return null; }
+}
+
+async function pushRemoteArchive(archive) {
+  try {
+    await fetch("/.netlify/functions/archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archive }),
+    });
+    return true;
+  } catch { return false; }
+}
+
 export default function App() {
   const [view, setView] = useState("form");
   const [classType, setClassType] = useState("Aqua Aerobics");
@@ -310,6 +426,7 @@ export default function App() {
   const [theme, setTheme] = useState("Ocean Waves");
   const [customTheme, setCustomTheme] = useState("");
   const [notes, setNotes] = useState("");
+  const [musicNotes, setMusicNotes] = useState("");
   const [step, setStep] = useState("form");
   const [workoutMd, setWorkoutMd] = useState("");
   const [musicMd, setMusicMd] = useState("");
@@ -318,27 +435,44 @@ export default function App() {
   const [archive, setArchive] = useState([]);
   const [saveStatus, setSaveStatus] = useState("");
   const [resultMeta, setResultMeta] = useState({ classType: "", theme: "" });
+  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | local-only
 
   const finalTheme = theme === "Custom..." ? customTheme : theme;
   const isGenerating = step === "generating-workout" || step === "generating-music";
 
   useEffect(() => {
+    // Load from localStorage immediately (instant), then attempt remote sync (authoritative)
     try {
       const saved = localStorage.getItem("workout-archive");
       if (saved) setArchive(JSON.parse(saved));
     } catch {}
+
+    (async () => {
+      setSyncStatus("syncing");
+      const remote = await fetchRemoteArchive();
+      if (remote) {
+        setArchive(remote);
+        try { localStorage.setItem("workout-archive", JSON.stringify(remote)); } catch {}
+        setSyncStatus("synced");
+      } else {
+        setSyncStatus("local-only");
+      }
+    })();
   }, []);
 
   async function persistArchive(updated) {
     setArchive(updated);
     try { localStorage.setItem("workout-archive", JSON.stringify(updated)); } catch {}
+    setSyncStatus("syncing");
+    const ok = await pushRemoteArchive(updated);
+    setSyncStatus(ok ? "synced" : "local-only");
   }
 
-  async function callClaude(system, user) {
+  async function callClaude(system, user, maxTokens = 4000) {
     const res = await fetch("/.netlify/functions/claude", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system, messages: [{ role: "user", content: user }] }),
+      body: JSON.stringify({ system, messages: [{ role: "user", content: user }], max_tokens: maxTokens }),
     });
     const data = await res.json();
     return data.content?.[0]?.text || "";
@@ -347,31 +481,72 @@ export default function App() {
   async function generate() {
     setError(""); setStep("generating-workout");
     const isPT = classType === "Personal Training";
+    const songAligned = isSongAligned(classType);
     try {
-      const workout = await callClaude(
-        isPT ? PT_SKILL : WORKOUT_SKILL,
-        isPT
-          ? `Generate a ${duration} personal training session with focus "${finalTheme}" at ${level}.${notes ? ` Notes: ${notes}` : ""}`
-          : `Generate a ${duration} ${classType} workout, theme "${finalTheme}", ${level}.${notes ? ` Notes: ${notes}` : ""} Follow the output format exactly including Music Energy Arc.`
-      );
-      setWorkoutMd(workout);
-
+      let workout = "";
       let music = "";
-      if (!isPT) {
-        setStep("generating-music");
-        music = await callClaude(MUSIC_SKILL, `Workout:\n\n${workout}\n\nCurate a playlist matching this workout's energy arc. Follow the format exactly.`);
-        setMusicMd(music);
-      } else { setMusicMd(""); }
 
-      const entry = { id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`, classType, theme: finalTheme, duration, level, notes, workoutMd: workout, musicMd: music, createdAt: new Date().toISOString() };
+      if (songAligned) {
+        // Spin / Aqua: playlist first, then workout cues tied to each song.
+        setStep("generating-music");
+        const musicUserPrompt =
+          `Curate the playlist for a ${duration} ${classType} class, theme "${finalTheme}", ${level}.` +
+          (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
+          ` Follow the format exactly.`;
+        music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 3000);
+        setMusicMd(music);
+
+        setStep("generating-workout");
+        const workoutUserPrompt =
+          `Class type: ${classType}\nDuration: ${duration}\nLevel: ${level}\nTheme: ${finalTheme}` +
+          (notes ? `\nAdditional notes: ${notes}` : "") +
+          `\n\nPLAYLIST (use this exactly, in order):\n\n${music}\n\n` +
+          `Generate the song-by-song workout. Each song from the playlist becomes its own ### block with metadata and coaching cues that reference that song's hook/lyrics/energy.`;
+        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 6000);
+        setWorkoutMd(workout);
+      } else if (isPT) {
+        workout = await callClaude(
+          PT_SKILL,
+          `Generate a ${duration} personal training session with focus "${finalTheme}" at ${level}.${notes ? ` Notes: ${notes}` : ""}`,
+          4000
+        );
+        setWorkoutMd(workout);
+      } else {
+        // HIIT, Strong & Steady — workout first, then matching music.
+        workout = await callClaude(
+          WORKOUT_SKILL,
+          `Generate a ${duration} ${classType} workout, theme "${finalTheme}", ${level}.${notes ? ` Notes: ${notes}` : ""} Follow the output format exactly including Music Energy Arc.`,
+          4000
+        );
+        setWorkoutMd(workout);
+
+        setStep("generating-music");
+        const musicUserPrompt =
+          `Workout:\n\n${workout}\n\nCurate a playlist matching this workout's energy arc.` +
+          (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
+          ` Follow the format exactly.`;
+        music = await callClaude(MUSIC_SKILL, musicUserPrompt, 3000);
+        setMusicMd(music);
+      }
+
+      const entry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        classType, theme: finalTheme, duration, level,
+        notes, musicNotes,
+        workoutMd: workout, musicMd: music,
+        createdAt: new Date().toISOString(),
+      };
       setSaveStatus("saving");
-      await persistArchive([entry, ...archive].slice(0, 50));
+      await persistArchive([entry, ...archive].slice(0, 100));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(""), 3000);
 
       setResultMeta({ classType, theme: finalTheme });
       setStep("done"); setActiveTab("workout");
-    } catch (e) { setError("Something went wrong. Please try again."); setStep("form"); }
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+      setStep("form");
+    }
   }
 
   function loadEntry(entry) {
@@ -381,8 +556,33 @@ export default function App() {
     setStep("done"); setActiveTab("workout"); setView("form");
   }
 
+  function downloadEntry(entry) {
+    const md = entryToMarkdown(entry);
+    const fname = `${slugify(entry.classType)}-${slugify(entry.theme)}-${entry.createdAt.slice(0, 10)}.md`;
+    downloadFile(md, fname, "text/markdown");
+  }
+
+  function downloadCurrent() {
+    const current = {
+      classType: resultMeta.classType,
+      theme: resultMeta.theme,
+      duration, level, notes, musicNotes,
+      workoutMd, musicMd,
+      createdAt: new Date().toISOString(),
+    };
+    downloadEntry(current);
+  }
+
   const pill = (active) => ({ padding: "0.5rem 0.85rem", borderRadius: 8, border: active ? "2px solid #e94560" : "1px solid rgba(255,255,255,0.18)", background: active ? "rgba(233,69,96,0.2)" : "rgba(255,255,255,0.05)", color: active ? "#e94560" : "rgba(255,255,255,0.65)", cursor: "pointer", fontSize: "0.82rem", fontWeight: active ? 700 : 400, transition: "all 0.15s" });
   const navBtn = (active) => ({ ...pill(active), padding: "0.5rem 1.2rem" });
+
+  const syncBadge = () => {
+    if (syncStatus === "synced") return { text: "✓ Synced across devices", color: "#68d391" };
+    if (syncStatus === "syncing") return { text: "⟳ Syncing…", color: "rgba(255,255,255,0.45)" };
+    if (syncStatus === "local-only") return { text: "⚠ Local only (cloud unavailable)", color: "#f6ad55" };
+    return null;
+  };
+  const badge = syncBadge();
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f3460 0%, #1a1a2e 50%, #16213e 100%)", padding: "2rem 1rem", fontFamily: "'Trebuchet MS', sans-serif" }}>
@@ -404,6 +604,7 @@ export default function App() {
               {archive.length > 0 && <span style={{ background: "#e94560", color: "white", borderRadius: 10, padding: "0 0.4rem", fontSize: "0.68rem", fontWeight: 700 }}>{archive.length}</span>}
             </button>
           </div>
+          {badge && <div style={{ marginTop: "0.5rem", fontSize: "0.7rem", color: badge.color }}>{badge.text}</div>}
         </div>
 
         {/* Archive */}
@@ -414,7 +615,7 @@ export default function App() {
                 <p style={{ margin: 0 }}>No saved workouts yet. Generate one and it'll appear here.</p>
               </div>
             : <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {archive.map(e => <ArchiveCard key={e.id} entry={e} onLoad={loadEntry} onDelete={id => persistArchive(archive.filter(x => x.id !== id))} />)}
+                {archive.map(e => <ArchiveCard key={e.id} entry={e} onLoad={loadEntry} onDelete={id => persistArchive(archive.filter(x => x.id !== id))} onDownload={downloadEntry} />)}
               </div>
         )}
 
@@ -462,10 +663,19 @@ export default function App() {
 
                   <div style={{ gridColumn: "1/-1" }}>
                     <label style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: 1.2, display: "block", marginBottom: "0.5rem" }}>
-                      Additional Notes <span style={{ opacity: 0.45, textTransform: "none" }}>(optional)</span>
+                      Workout Notes <span style={{ opacity: 0.45, textTransform: "none" }}>(optional)</span>
                     </label>
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. focus on core, client has knee issues, holiday theme..." rows={2} style={{ width: "100%", padding: "0.7rem 0.9rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: "0.85rem", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
                   </div>
+
+                  {hasMusic(classType) && (
+                    <div style={{ gridColumn: "1/-1" }}>
+                      <label style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: 1.2, display: "block", marginBottom: "0.5rem" }}>
+                        Music Preferences <span style={{ opacity: 0.45, textTransform: "none" }}>(optional)</span>
+                      </label>
+                      <textarea value={musicNotes} onChange={e => setMusicNotes(e.target.value)} placeholder="e.g. no country, 90s hip-hop, Latin-flavored, avoid explicit lyrics..." rows={2} style={{ width: "100%", padding: "0.7rem 0.9rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: "0.85rem", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                    </div>
+                  )}
                 </div>
 
                 {error && <p style={{ color: "#e94560", marginTop: "1rem", fontSize: "0.83rem" }}>{error}</p>}
@@ -476,11 +686,11 @@ export default function App() {
 
                 {isGenerating && (
                   <div style={{ marginTop: "0.9rem", textAlign: "center", display: "flex", justifyContent: "center", gap: "0.5rem", alignItems: "center" }}>
-                    {(classType === "Personal Training" ? ["generating-workout"] : ["generating-workout", "generating-music"]).map((s, i) => (
+                    {(classType === "Personal Training" ? ["generating-workout"] : isSongAligned(classType) ? ["generating-music", "generating-workout"] : ["generating-workout", "generating-music"]).map((s, i, arr) => (
                       <div key={s} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: step === s ? "#e94560" : (s === "generating-workout" && step === "generating-music") ? "rgba(233,69,96,0.5)" : "rgba(255,255,255,0.2)", transition: "all 0.3s" }} />
-                        <span style={{ color: step === s ? "#e94560" : "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>{i === 0 ? "Workout" : "Music"}</span>
-                        {i === 0 && classType !== "Personal Training" && <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 0.2rem" }}>→</span>}
+                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: step === s ? "#e94560" : "rgba(255,255,255,0.2)", transition: "all 0.3s" }} />
+                        <span style={{ color: step === s ? "#e94560" : "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>{s === "generating-music" ? "Music" : "Workout"}</span>
+                        {i < arr.length - 1 && <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 0.2rem" }}>→</span>}
                       </div>
                     ))}
                   </div>
@@ -498,6 +708,9 @@ export default function App() {
                   ))}
                   <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem", alignItems: "center" }}>
                     {saveStatus === "saved" && <span style={{ color: "#68d391", fontSize: "0.76rem" }}>✓ Saved to archive</span>}
+                    <button onClick={downloadCurrent} title="Download as Markdown (paste into Google Docs)" style={{ padding: "0.5rem 0.9rem", borderRadius: 8, border: "1px solid rgba(104,211,145,0.4)", background: "rgba(104,211,145,0.1)", color: "#68d391", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                      ⬇ Markdown
+                    </button>
                     <button onClick={() => setStep("form")} style={{ padding: "0.5rem 0.9rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "transparent", color: "rgba(255,255,255,0.45)", cursor: "pointer", fontSize: "0.78rem" }}>
                       ← New
                     </button>
