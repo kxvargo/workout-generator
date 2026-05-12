@@ -469,13 +469,26 @@ export default function App() {
   }
 
   async function callClaude(system, user, maxTokens = 4000) {
-    const res = await fetch("/.netlify/functions/claude", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system, messages: [{ role: "user", content: user }], max_tokens: maxTokens }),
-    });
+    let res;
+    try {
+      res = await fetch("/.netlify/functions/claude", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system, messages: [{ role: "user", content: user }], max_tokens: maxTokens }),
+      });
+    } catch (e) {
+      // network error / function never responded (likely Netlify function timeout)
+      throw new Error(`Network error reaching Claude function — likely a function timeout. The site's Netlify function may have hit its time limit before Claude finished. (${e.message})`);
+    }
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Claude function returned ${res.status} ${res.statusText}. ${text.slice(0, 300)}`);
+    }
     const data = await res.json();
-    return data.content?.[0]?.text || "";
+    if (data.error) throw new Error(`Claude API error: ${data.error.message || JSON.stringify(data.error)}`);
+    const out = data.content?.[0]?.text;
+    if (!out) throw new Error(`Claude returned no text content. Response: ${JSON.stringify(data).slice(0, 300)}`);
+    return out;
   }
 
   async function generate() {
@@ -502,7 +515,7 @@ export default function App() {
           (notes ? `\nAdditional notes: ${notes}` : "") +
           `\n\nPLAYLIST (use this exactly, in order):\n\n${music}\n\n` +
           `Generate the song-by-song workout. Each song from the playlist becomes its own ### block with metadata and coaching cues that reference that song's hook/lyrics/energy.`;
-        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 6000);
+        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 4000);
         setWorkoutMd(workout);
       } else if (isPT) {
         workout = await callClaude(
@@ -544,7 +557,8 @@ export default function App() {
       setResultMeta({ classType, theme: finalTheme });
       setStep("done"); setActiveTab("workout");
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      console.error("[generate] failed:", e);
+      setError(e.message || "Something went wrong. Please try again.");
       setStep("form");
     }
   }
@@ -678,7 +692,12 @@ export default function App() {
                   )}
                 </div>
 
-                {error && <p style={{ color: "#e94560", marginTop: "1rem", fontSize: "0.83rem" }}>{error}</p>}
+                {error && (
+                  <div style={{ marginTop: "1rem", padding: "0.8rem 1rem", borderRadius: 8, background: "rgba(233,69,96,0.1)", border: "1px solid rgba(233,69,96,0.35)" }}>
+                    <div style={{ color: "#e94560", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.3rem" }}>⚠ Generation failed</div>
+                    <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontFamily: "monospace", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{error}</div>
+                  </div>
+                )}
 
                 <button onClick={generate} disabled={isGenerating || (theme === "Custom..." && !customTheme.trim())} style={{ marginTop: "1.5rem", width: "100%", padding: "0.95rem", borderRadius: 12, border: "none", background: isGenerating ? "rgba(233,69,96,0.35)" : "linear-gradient(135deg, #e94560, #c23152)", color: "white", fontSize: "0.95rem", fontWeight: 700, cursor: isGenerating ? "not-allowed" : "pointer", letterSpacing: 0.4 }}>
                   {step === "generating-workout" ? "⚡ Building your workout..." : step === "generating-music" ? "🎵 Curating your playlist..." : classType === "Personal Training" ? "Generate Training Session" : "Generate Workout + Playlist"}
