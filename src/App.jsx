@@ -77,7 +77,8 @@ Return ONLY this markdown — no preamble:
 - Artist Name - Song Title
 [complete flat list, all songs in order]
 
-Rules: real songs only, 2-4 per phase, match energy arc, no repeated artists, exact titles for Spotify.`;
+Rules: real songs only, 2-4 per phase, match energy arc, no repeated artists, exact titles for Spotify.
+Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.`;
 
 // ─────────────────────────────────────────────────────────────────────────
 // SONG-ALIGNED PROMPTS — for Spin and Aqua. Playlist is generated first,
@@ -114,7 +115,8 @@ Return ONLY this markdown — no preamble:
 - Artist Name - Song Title
 [flat list, in order, exact titles for Spotify]
 
-Rules: real songs only, exact titles for Spotify, no repeated artists, total duration must approximate the requested class length. For Aqua Aerobics the phase structure above is mandatory.`;
+Rules: real songs only, exact titles for Spotify, no repeated artists, total duration must approximate the requested class length. For Aqua Aerobics the phase structure above is mandatory.
+Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.`;
 
 const SONG_ALIGNED_WORKOUT_SKILL = `You are an experienced group fitness instructor (~20 years endurance sports, USMS Level 1 Swim Coach, expert in aqua and spin programming). You've been given a finalized playlist for an upcoming class. Write the class as a SONG-BY-SONG workout where each song's coaching block references that specific song's hooks, lyrics, beat, and energy.
 
@@ -269,6 +271,10 @@ function legacyCopy(text) {
 
 function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40); }
 function formatDate(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+function fileDateStamp(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
+}
 
 function entryToMarkdown(entry) {
   const header = `# ${entry.classType}: ${entry.theme}\n` +
@@ -317,8 +323,9 @@ function MarkdownDisplay({ content }) {
 function SpotifyPanel({ musicMd, title }) {
   const [copied, setCopied] = useState(false);
   const [cmdCopied, setCmdCopied] = useState(false);
+  const [downloadStamp] = useState(() => fileDateStamp());
   const songList = extractSongList(musicMd);
-  const filename = `${slugify(title || "playlist")}-songs.txt`;
+  const filename = `${slugify(title || "playlist")}-${downloadStamp}-songs.txt`;
   const cmd = `python create-playlist.py ~/Downloads/${filename}`;
 
   function handleCopy(text, set) {
@@ -540,7 +547,7 @@ export default function App() {
         const musicUserPrompt =
           `Curate the playlist for a ${duration} ${classType} class, theme "${finalTheme}", ${level}.` +
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
-          ` Follow the format exactly.`;
+          ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
         music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 3000);
         setMusicMd(music);
 
@@ -572,7 +579,7 @@ export default function App() {
         const musicUserPrompt =
           `Workout:\n\n${workout}\n\nCurate a playlist matching this workout's energy arc.` +
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
-          ` Follow the format exactly.`;
+          ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
         music = await callClaude(MUSIC_SKILL, musicUserPrompt, 3000);
         setMusicMd(music);
       }
@@ -722,7 +729,7 @@ export default function App() {
                       <label style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: 1.2, display: "block", marginBottom: "0.5rem" }}>
                         Music Preferences <span style={{ opacity: 0.45, textTransform: "none" }}>(optional)</span>
                       </label>
-                      <textarea value={musicNotes} onChange={e => setMusicNotes(e.target.value)} placeholder="e.g. no country, 90s hip-hop, Latin-flavored, avoid explicit lyrics..." rows={2} style={{ width: "100%", padding: "0.7rem 0.9rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: "0.85rem", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                      <textarea value={musicNotes} onChange={e => setMusicNotes(e.target.value)} placeholder="e.g. no country, 90s hip-hop, Latin-flavored, Motown..." rows={2} style={{ width: "100%", padding: "0.7rem 0.9rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: "0.85rem", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
                     </div>
                   )}
                 </div>
