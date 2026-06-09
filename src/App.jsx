@@ -78,7 +78,8 @@ Return ONLY this markdown — no preamble:
 [complete flat list, all songs in order]
 
 Rules: real songs only, 2-4 per phase, match energy arc, no repeated artists, exact titles for Spotify.
-Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.`;
+Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.
+Variety requirement: avoid defaulting to the most obvious group-fitness staples unless the user asks for them. Favor a fresh mix across eras, genres, tempos, and artist popularity. Include some less-overused but still recognizable songs that fit the class energy.`;
 
 // ─────────────────────────────────────────────────────────────────────────
 // SONG-ALIGNED PROMPTS — for Spin and Aqua. Playlist is generated first,
@@ -116,7 +117,8 @@ Return ONLY this markdown — no preamble:
 [flat list, in order, exact titles for Spotify]
 
 Rules: real songs only, exact titles for Spotify, no repeated artists, total duration must approximate the requested class length. For Aqua Aerobics the phase structure above is mandatory.
-Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.`;
+Clean music requirement: do not include songs or versions with explicit lyrics. If a song is commonly explicit, choose the official clean, radio edit, edited, or family-friendly version instead and use that exact Spotify-searchable title.
+Variety requirement: avoid defaulting to the most obvious group-fitness staples unless the user asks for them. Favor a fresh mix across eras, genres, tempos, and artist popularity. Include some less-overused but still recognizable songs that fit the class energy.`;
 
 const SONG_ALIGNED_WORKOUT_SKILL = `You are an experienced group fitness instructor (~20 years endurance sports, USMS Level 1 Swim Coach, expert in aqua and spin programming). You've been given a finalized playlist for an upcoming class. Write the class as a SONG-BY-SONG workout where each song's coaching block references that specific song's hooks, lyrics, beat, and energy.
 
@@ -239,6 +241,23 @@ function extractSongList(md) {
   const idx = md.indexOf("## Full Song List");
   if (idx === -1) return "";
   return md.slice(idx).split("\n").filter(l => l.startsWith("- ")).map(l => l.slice(2).trim()).join("\n");
+}
+
+function recentSongsToAvoid(archive, classType, limit = 50) {
+  const normalize = (song) => song.toLowerCase().replace(/\s+/g, " ").trim();
+  const seen = new Set();
+  return archive
+    .filter(entry => entry.classType === classType && entry.musicMd)
+    .flatMap(entry => extractSongList(entry.musicMd).split("\n"))
+    .map(song => song.trim())
+    .filter(Boolean)
+    .filter(song => {
+      const key = normalize(song);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit);
 }
 
 function downloadFile(content, filename, type = "text/plain") {
@@ -537,6 +556,10 @@ export default function App() {
     setError(""); setStep("generating-workout");
     const isPT = classType === "Personal Training";
     const songAligned = isSongAligned(classType);
+    const recentSongs = recentSongsToAvoid(archive, classType);
+    const recentSongsPrompt = recentSongs.length
+      ? ` Avoid repeating these recently used songs unless the user specifically requested one of them:\n${recentSongs.map(song => `- ${song}`).join("\n")}\n`
+      : "";
     try {
       let workout = "";
       let music = "";
@@ -547,6 +570,7 @@ export default function App() {
         const musicUserPrompt =
           `Curate the playlist for a ${duration} ${classType} class, theme "${finalTheme}", ${level}.` +
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
+          recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
         music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 3000);
         setMusicMd(music);
@@ -579,6 +603,7 @@ export default function App() {
         const musicUserPrompt =
           `Workout:\n\n${workout}\n\nCurate a playlist matching this workout's energy arc.` +
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
+          recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
         music = await callClaude(MUSIC_SKILL, musicUserPrompt, 3000);
         setMusicMd(music);
