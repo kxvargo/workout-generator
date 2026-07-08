@@ -572,7 +572,7 @@ export default function App() {
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
           recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
-        music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 3000);
+        music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 4000);
         setMusicMd(music);
 
         setStep("generating-workout");
@@ -581,13 +581,13 @@ export default function App() {
           (notes ? `\nAdditional notes: ${notes}` : "") +
           `\n\nPLAYLIST (use this exactly, in order):\n\n${music}\n\n` +
           `Generate the song-by-song workout. Each song from the playlist becomes its own ### block with metadata and coaching cues that reference that song's hook/lyrics/energy.`;
-        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 4000);
+        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 8000);
         setWorkoutMd(workout);
       } else if (isPT) {
         workout = await callClaude(
           PT_SKILL,
           `Generate a ${duration} personal training session with focus "${finalTheme}" at ${level}.${notes ? ` Notes: ${notes}` : ""}`,
-          4000
+          5000
         );
         setWorkoutMd(workout);
       } else {
@@ -595,7 +595,7 @@ export default function App() {
         workout = await callClaude(
           WORKOUT_SKILL,
           `Generate a ${duration} ${classType} workout, theme "${finalTheme}", ${level}.${notes ? ` Notes: ${notes}` : ""} Follow the output format exactly including Music Energy Arc.`,
-          4000
+          5000
         );
         setWorkoutMd(workout);
 
@@ -605,7 +605,7 @@ export default function App() {
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
           recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
-        music = await callClaude(MUSIC_SKILL, musicUserPrompt, 3000);
+        music = await callClaude(MUSIC_SKILL, musicUserPrompt, 4000);
         setMusicMd(music);
       }
 

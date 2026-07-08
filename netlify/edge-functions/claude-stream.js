@@ -20,7 +20,7 @@ export default async (request, context) => {
     });
   }
 
-  const maxTokens = Math.min(Math.max(body.max_tokens || 4000, 500), 8000);
+  const maxTokens = Math.min(Math.max(body.max_tokens || 4000, 500), 16000);
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   if (!apiKey) {
