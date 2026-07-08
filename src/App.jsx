@@ -803,7 +803,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ background: "white", borderRadius: 16, padding: "2rem", minHeight: 300 }}>
+                <div style={{ background: "white", borderRadius: 16, padding: "2rem", minHeight: 300, maxHeight: "calc(100vh - 240px)", overflowY: "auto", overscrollBehavior: "contain" }}>
                   {activeTab === "workout" && <MarkdownDisplay content={workoutMd} />}
                   {activeTab === "music" && <MarkdownDisplay content={musicMd} />}
                   {activeTab === "spotify" && <SpotifyPanel musicMd={musicMd} title={resultMeta.theme} />}
