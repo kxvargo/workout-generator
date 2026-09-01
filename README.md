@@ -45,8 +45,10 @@ This runs both the Vite dev server and the function at `http://localhost:8888`.
 ## Project structure
 ```
 ├── netlify/
+│   ├── edge-functions/
+│   │   └── claude-stream.js # Streams the Anthropic API to the browser (SSE)
 │   └── functions/
-│       └── claude.js        # Serverless function (proxies Anthropic API)
+│       └── archive.mjs      # Workout archive, backed by Netlify Blobs
 ├── src/
 │   ├── main.jsx             # React entry point
 │   └── App.jsx              # Main app
