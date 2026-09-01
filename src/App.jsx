@@ -500,7 +500,7 @@ export default function App() {
 
   // Streams from a Netlify Edge Function so long Claude responses don't
   // hit the regular function timeout. Reads SSE and accumulates text deltas.
-  async function callClaude(system, user, maxTokens = 4000, onProgress) {
+  async function callClaude(system, user, maxTokens = 16000, onProgress) {
     let res;
     try {
       res = await fetch("/api/claude-stream", {
@@ -521,11 +521,12 @@ export default function App() {
     const decoder = new TextDecoder();
     let buffer = "";
     let result = "";
+    let stopReason = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
       // SSE: events are separated by a blank line.
       const events = buffer.split("\n\n");
@@ -542,13 +543,24 @@ export default function App() {
         if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
           result += json.delta.text;
           if (onProgress) onProgress(result);
+        } else if (json.type === "message_delta" && json.delta?.stop_reason) {
+          stopReason = json.delta.stop_reason;
         } else if (json.type === "error") {
           throw new Error(`Claude API error: ${json.error?.message || JSON.stringify(json.error)}`);
         }
       }
     }
 
-    if (!result) throw new Error("Claude stream ended with no text content");
+    if (!result) {
+      throw new Error(
+        stopReason === "max_tokens"
+          ? "Claude used its whole token budget thinking and never wrote the answer. Try a shorter theme/notes, or raise max_tokens."
+          : `Claude stream ended with no text content (stop_reason: ${stopReason || "unknown"}).`
+      );
+    }
+    if (stopReason === "max_tokens") {
+      console.warn("Claude response was truncated at max_tokens; output may be incomplete.");
+    }
     return result;
   }
 
@@ -572,7 +584,7 @@ export default function App() {
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
           recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
-        music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 4000);
+        music = await callClaude(SONG_PLAYLIST_SKILL, musicUserPrompt, 16000);
         setMusicMd(music);
 
         setStep("generating-workout");
@@ -581,13 +593,13 @@ export default function App() {
           (notes ? `\nAdditional notes: ${notes}` : "") +
           `\n\nPLAYLIST (use this exactly, in order):\n\n${music}\n\n` +
           `Generate the song-by-song workout. Each song from the playlist becomes its own ### block with metadata and coaching cues that reference that song's hook/lyrics/energy.`;
-        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 8000);
+        workout = await callClaude(SONG_ALIGNED_WORKOUT_SKILL, workoutUserPrompt, 32000);
         setWorkoutMd(workout);
       } else if (isPT) {
         workout = await callClaude(
           PT_SKILL,
           `Generate a ${duration} personal training session with focus "${finalTheme}" at ${level}.${notes ? ` Notes: ${notes}` : ""}`,
-          5000
+          16000
         );
         setWorkoutMd(workout);
       } else {
@@ -595,7 +607,7 @@ export default function App() {
         workout = await callClaude(
           WORKOUT_SKILL,
           `Generate a ${duration} ${classType} workout, theme "${finalTheme}", ${level}.${notes ? ` Notes: ${notes}` : ""} Follow the output format exactly including Music Energy Arc.`,
-          5000
+          16000
         );
         setWorkoutMd(workout);
 
@@ -605,7 +617,7 @@ export default function App() {
           (musicNotes ? ` Music preferences: ${musicNotes}.` : "") +
           recentSongsPrompt +
           ` Use only clean, non-explicit songs or clean/radio edit versions. Follow the format exactly.`;
-        music = await callClaude(MUSIC_SKILL, musicUserPrompt, 4000);
+        music = await callClaude(MUSIC_SKILL, musicUserPrompt, 16000);
         setMusicMd(music);
       }
 

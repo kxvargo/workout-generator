@@ -20,7 +20,7 @@ export default async (request, context) => {
     });
   }
 
-  const maxTokens = Math.min(Math.max(body.max_tokens || 4000, 500), 16000);
+  const maxTokens = Math.min(Math.max(body.max_tokens || 16000, 4000), 64000);
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   if (!apiKey) {
@@ -40,6 +40,13 @@ export default async (request, context) => {
     body: JSON.stringify({
       model: "claude-sonnet-5",
       max_tokens: maxTokens,
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and thinking
+      // tokens count against max_tokens. At the old 4k cap the model could spend
+      // the whole budget reasoning and stop before emitting any prose, which the
+      // client saw as "stream ended with no text content". Low effort keeps
+      // thinking short; the raised cap leaves room for the answer either way.
+      thinking: { type: "adaptive" },
+      output_config: { effort: "low" },
       system: body.system,
       messages: body.messages,
       stream: true,
